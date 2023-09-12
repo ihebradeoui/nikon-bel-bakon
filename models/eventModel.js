@@ -5,6 +5,8 @@ const Schema = mongoose.Schema(
         description: String,
         date: String,
         location: String,
+        seats: Number,
+        availableSeats: Number
     }
     
 )

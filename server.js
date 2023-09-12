@@ -1,4 +1,5 @@
 const express = require('express')
+const cors = require('cors')
 const mongoose = require('mongoose')
 const Event = require('./models/eventModel');
 const BookedEvent = require('./models/bookedEventModel');
@@ -7,18 +8,23 @@ const app = express()
 const port = 3000
 
 
-
+const corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200,
+  }
+app.use(cors(corsOptions));
 app.use(express.json());
 //routes 
 
-app.get('/', (req, res) => {
+app.get('/', cors(corsOptions),(req, res) => {
   res.send('Hello Worldss!')
 })
 app.get('/blog', (req, res) => {
     res.send('Hello blog!')
   })
   
-app.post('/event', async(req, res) => {
+//create event
+app.post('/event',cors(), async(req, res) => {
     try 
     {
         const event = await Event.create(req.body);
@@ -30,7 +36,7 @@ app.post('/event', async(req, res) => {
   })
 
 //get all events
-app.get('/event', async(req, res) => {
+app.get('/event',cors(), async(req, res) => {
     try 
     {
         const events = await Event.find({});
@@ -41,7 +47,7 @@ app.get('/event', async(req, res) => {
     }
   })
 //get event by id
-app.get('/event/:id', async(req, res) => {
+app.get('/event/:id',cors(), async(req, res) => {
     try 
     {
         const event = await Event.findById(req.params.id);
@@ -52,7 +58,7 @@ app.get('/event/:id', async(req, res) => {
     }
   })
 //update event by id
-app.put('/event/:id', async(req, res) => {
+app.put('/event/:id',cors(), async(req, res) => {
     try 
     {
         const event = await Event.findByIdAndUpdate(req.params.id,req.body);
@@ -68,7 +74,7 @@ app.put('/event/:id', async(req, res) => {
 )
 
 //delete event by id
-app.delete('/event/:id', async(req, res) => {
+app.delete('/event/:id',cors(), async(req, res) => {
     try 
     {
         const event = await Event.findByIdAndDelete(req.params.id);
@@ -82,20 +88,45 @@ app.delete('/event/:id', async(req, res) => {
 }  
 )
 
-//book event
-app.post('/bookEvent', async(req, res) => {
-    try 
+//book event by id and user id and decrease available seats
+app.post('/bookEvent/:event/:user',cors(), async(req, res) => {
+    try
     {
-        const bookedEvent = await BookedEvent.create(req.body);
+        const event = await Event.findById(req.params.event);
+        if(!event)
+         res.status(404).send("event not found");
+        if(event.availableSeats<=0)
+         res.status(404).send("no available seats");
+        const bookedEvent = await BookedEvent.create({eventId:req.params.event,user:req.params.user});
+        event.availableSeats--;
+        await event.save();
         res.status(200).json(bookedEvent);
     }
     catch (err) {
         res.status(500).json(err);
     }
-  })
+}
+)
+//cancel booking by id and increase available seats
+app.delete('/bookEvent/:id',cors(), async(req, res) => {
+    try
+    {
+        const bookedEvent = await BookedEvent.findByIdAndDelete(req.params.id);
+        if(!bookedEvent)
+         res.status(404).send("event not found");
+        const event = await Event.findById(bookedEvent.event);
+        event.availableSeats++;
+        await event.save();
+        res.status(200).json(bookedEvent);
+    }
+    catch (err) {
+        res.status(500).json(err);
+    }
+}
+)
 
 //get all booked events
-app.get('/bookEvent', async(req, res) => {
+app.get('/bookEvent',cors(), async(req, res) => {
     try 
     {
         const bookedEvents = await BookedEvent.find({});
@@ -106,7 +137,7 @@ app.get('/bookEvent', async(req, res) => {
     }
   })
 //get booked event by id
-app.get('/bookEvent/:id', async(req, res) => {
+app.get('/bookEvent/:id',cors(), async(req, res) => {
     try 
     {
         const bookedEvent = await BookedEvent.findById(req.params.id);
@@ -118,7 +149,7 @@ app.get('/bookEvent/:id', async(req, res) => {
   }
 )
 //delete booked event by id
-app.delete('/bookEvent/:id', async(req, res) => {
+app.delete('/bookEvent/:id',cors(), async(req, res) => {
     try 
     {
         const bookedEvent = await BookedEvent.findByIdAndDelete(req.params.id);
@@ -133,7 +164,7 @@ app.delete('/bookEvent/:id', async(req, res) => {
 )
 
 //get booked event by user
-app.get('/bookEvent/user/:user', async(req, res) => {
+app.get('/bookEvent/user/:user',cors(), async(req, res) => {
     try 
     {
         const bookedEvent = await BookedEvent.find({user:req.params.user});
@@ -145,7 +176,7 @@ app.get('/bookEvent/user/:user', async(req, res) => {
   }
 )
 //get booked event by event
-app.get('/bookEvent/event/:event', async(req, res) => {
+app.get('/bookEvent/event/:event',cors(), async(req, res) => {
     try 
     {
         const bookedEvent = await BookedEvent.find({event:req.params.event});
@@ -157,7 +188,7 @@ app.get('/bookEvent/event/:event', async(req, res) => {
   }
 )
 //get events by user that booked them
-app.get('/event/user/:user', async(req, res) => {
+app.get('/event/user/:user',cors(), async(req, res) => {
     try 
     {
         const bookedEvents = await BookedEvent.find({user:req.params.user});
@@ -173,7 +204,7 @@ app.get('/event/user/:user', async(req, res) => {
 
 
 //get all users
-app.get('/user', async(req, res) => {
+app.get('/user',cors(), async(req, res) => {
     try 
     {
         const users = await User.find({});
@@ -185,7 +216,7 @@ app.get('/user', async(req, res) => {
   })
 
 //get user by name
-app.get('/user/:name', async(req, res) => {
+app.get('/user/:name',cors(), async(req, res) => {
     try 
     {
         const user = await User.findOne({name:req.params.name});
@@ -196,7 +227,7 @@ app.get('/user/:name', async(req, res) => {
     }
   })
 //add user 
-app.post('/user', async(req, res) => {
+app.post('/user',cors(), async(req, res) => {
     try 
     {
         const user = await User.create(req.body);
@@ -207,16 +238,12 @@ app.post('/user', async(req, res) => {
     }
   })
 
-  //delete user by name
-app.delete('/user/:name', async(req, res) => {
+  //delete user by id
+app.delete('/user/:id',cors(), async(req, res) => {
     try 
     {
-        const user = await User.find({name:req.params.name});
-        if(!user)
-         res.status(404).send("user not found");
-        const deletedUser = await User.findByIdAndDelete(user._id);
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
         res.status(200).json(deletedUser);    
-
     }
     catch (err) {
         res.status(500).json(err);
@@ -225,7 +252,7 @@ app.delete('/user/:name', async(req, res) => {
 )
 
 //update user by id
-app.put('/user/:id', async(req, res) => {
+app.put('/user/:id',cors(), async(req, res) => {
     try 
     {
         const user = await User.findByIdAndUpdate(req.params.id,req.body);
@@ -238,6 +265,43 @@ app.put('/user/:id', async(req, res) => {
     }
 }
 )
+//search events by name or location or date or description or seats or availableSeats
+app.get('/event/search/:search',cors(), async(req, res) => {
+    try
+    {
+        const events = await Event.find({$or:[{name:req.params.search},{location:req.params.search},{date:req.params.search},{description:req.params.search},{seats:req.params.search},{availableSeats:req.params.search}]});
+        res.status(200).json(events);
+    }
+    catch (err) {
+        res.status(500).json(err);
+    }
+}
+)
+//search users by name or email or role
+app.get('/user/search/:search',cors(), async(req, res) => {
+    try
+    {
+        const users = await User.find({$or:[{name:req.params.search},{email:req.params.search},{role:req.params.search}]});
+        res.status(200).json(users);
+    }
+    catch (err) {
+        res.status(500).json(err);
+    }
+}
+)
+//search booked events by user or event
+app.get('/bookEvent/search/:search',cors(), async(req, res) => {
+    try
+    {
+        const bookedEvents = await BookedEvent.find({$or:[{user:req.params.search},{event:req.params.search}]});
+        res.status(200).json(bookedEvents);
+    }
+    catch (err) {
+        res.status(500).json(err);
+    }
+}
+)
+
 
 
 
@@ -251,3 +315,4 @@ app.listen(port, () => {
 ).catch((err) => console.log(err)
 
 );
+ 
