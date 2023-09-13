@@ -265,11 +265,25 @@ app.put('/user/:id',cors(), async(req, res) => {
     }
 }
 )
-//search events by name or location or date or description or seats or availableSeats
+// //search events by name or location or date or description or seats or availableSeats
+// app.get('/event/search/:search',cors(), async(req, res) => {
+//     try
+//     {
+//         const events = await Event.find({$or:[{name:req.params.search},{location:req.params.search},{description:req.params.search}]});
+//         res.status(200).json(events);
+//     }
+//     catch (err) {
+//         res.status(500).json(err);
+//     }
+// }
+//)
+
+
+//search events by name or location if it contains the search string
 app.get('/event/search/:search',cors(), async(req, res) => {
     try
     {
-        const events = await Event.find({$or:[{name:req.params.search},{location:req.params.search},{date:req.params.search},{description:req.params.search},{seats:req.params.search},{availableSeats:req.params.search}]});
+        const events = await Event.find({$or:[{name:{$regex:req.params.search,$options:'i'}},{location:{$regex:req.params.search,$options:'i'}}]});
         res.status(200).json(events);
     }
     catch (err) {
@@ -277,6 +291,7 @@ app.get('/event/search/:search',cors(), async(req, res) => {
     }
 }
 )
+
 //search users by name or email or role
 app.get('/user/search/:search',cors(), async(req, res) => {
     try
