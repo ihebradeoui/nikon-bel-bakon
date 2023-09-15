@@ -3,6 +3,7 @@ const Schema = mongoose.Schema(
     {
         eventId: String,
         userId: String,
+        seatsTaken : Number,
     }
     
 )

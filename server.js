@@ -106,7 +106,7 @@ app.delete('/event/:id',cors(), async(req, res) => {
 )
 
 //book event by id and user id and decrease available seats
-app.get('/bookEvent/:event/:user',cors(), async(req, res) => {
+app.get('/bookEvent/:event/:user/:seatsTaken',cors(), async(req, res) => {
     try
     {
         const event = await Event.findById(req.params.event);
@@ -114,8 +114,8 @@ app.get('/bookEvent/:event/:user',cors(), async(req, res) => {
          res.status(404).send("event not found");
         if(event.availableSeats<=0)
          res.status(404).send("no available seats");
-        const bookedEvent = await BookedEvent.create({eventId:req.params.event,userId:req.params.user});
-        event.availableSeats--;
+        const bookedEvent = await BookedEvent.create({eventId:req.params.event,userId:req.params.user,seatsTaken:req.params.seatsTaken});
+        event.availableSeats-=req.params.seatsTaken;
         await event.save();
         res.status(200).json(bookedEvent);
     }
@@ -140,7 +140,7 @@ app.delete('/bookEvent/delete/:event/:user',cors(), async(req, res) => {
         else 
         {
             if(event.availableSeats<event.seats){
-                event.availableSeats++;
+                event.availableSeats+=bookedEvent.seatsTaken;
             }
         await BookedEvent.findByIdAndDelete(bookedEvent._id);
         await event.save();
@@ -215,6 +215,7 @@ app.delete('/bookEvent/:id',cors(), async(req, res) => {
     }
 }  
 )
+
 
 //get booked event by user
 app.get('/bookEvent/user/:user',cors(), async(req, res) => {
