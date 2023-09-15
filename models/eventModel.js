@@ -6,7 +6,8 @@ const Schema = mongoose.Schema(
         date: String,
         location: String,
         seats: Number,
-        availableSeats: Number
+        availableSeats: Number,
+        imageUrl: String,
     }
     
 )
